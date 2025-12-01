@@ -8,17 +8,15 @@ class HiveService {
   static const usersBoxName = 'usersBox';
   static const sessionBoxName = 'sessionBox';
   static const favBoxName = 'favBox';
+  static const uploadedBox = 'uploaded_recipes'; // 🔥 buat upload resep
 
   static Future<void> init() async {
     await Hive.initFlutter();
 
-    // 🔥 BOX WAJIB DIBUKA (BIAR GA ERROR)
-    await Hive.openBox('uploaded_recipes');
-    await Hive.openBox('recipes');          // <--- DITAMBAHKAN
-    await Hive.openBox('saved_recipes');    // <--- DITAMBAHKAN
-    await Hive.openBox('my_recipes');       // <--- DITAMBAHKAN
+    // 🔥 WAJIB DIBUKA
+    await Hive.openBox(uploadedBox);
 
-    // Enkripsi untuk usersBox
+    // Enkripsi users box
     final key = sha256.convert(utf8.encode('foodmate-secret-key')).bytes;
     final cipher = HiveAesCipher(Uint8List.fromList(key));
 
@@ -51,7 +49,6 @@ class HiveService {
   // ===================== LOGIN =====================
   static bool login(String email, String password) {
     final usersBox = Hive.box(usersBoxName);
-
     if (!usersBox.containsKey(email)) return false;
 
     final userData = usersBox.get(email) as Map;
@@ -118,13 +115,15 @@ class HiveService {
     box.put(_userFavKey(), list);
   }
 
+  // ===================== UPLOADED RECIPES =====================
+
   static void addUploadedRecipe(Recipe recipe) {
-    final box = Hive.box('uploaded_recipes');
+    final box = Hive.box(uploadedBox);
     box.put(recipe.id, recipe.toMap());
   }
 
   static List<Recipe> getUploadedRecipes() {
-    final box = Hive.box('uploaded_recipes');
+    final box = Hive.box(uploadedBox);
     return box.values
         .map((data) => Recipe.fromMap(Map<String, dynamic>.from(data)))
         .toList();

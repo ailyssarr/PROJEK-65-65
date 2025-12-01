@@ -176,17 +176,17 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
 
             // LANGKAH
             _buildSectionCard(
-            title: 'Langkah Memasak',
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: r.langkah.asMap().entries.map((e) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: Text('${e.key + 1}. ${e.value}'),
-                );
-              }).toList(),
+              title: 'Langkah Memasak',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: r.langkahMemasak.asMap().entries.map((e) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Text('${e.key + 1}. ${e.value}'),
+                  );
+                }).toList(),
+              ),
             ),
-          ),
           ],
         ),
       ),

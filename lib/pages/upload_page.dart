@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../models/recipe.dart';
 import '../services/hive_service.dart';
 
@@ -15,16 +17,27 @@ class _UploadPageState extends State<UploadPage> {
   final TextEditingController _deskripsiCtrl = TextEditingController();
   final TextEditingController _porsiCtrl = TextEditingController();
   final TextEditingController _waktuCtrl = TextEditingController();
-  final TextEditingController _fotoCtrl = TextEditingController();
   final TextEditingController _bahanCtrl = TextEditingController();
   final TextEditingController _langkahCtrl = TextEditingController();
 
   final Color _primary = const Color(0xFFFFB074);
 
+  File? _imageFile;
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> _pickImage(ImageSource source) async {
+    final XFile? picked = await _picker.pickImage(source: source);
+    if (picked != null) {
+      setState(() {
+        _imageFile = File(picked.path);
+      });
+    }
+  }
+
   void _save() {
     if (_namaCtrl.text.isEmpty ||
         _deskripsiCtrl.text.isEmpty ||
-        _fotoCtrl.text.isEmpty ||
+        _imageFile == null ||
         _bahanCtrl.text.isEmpty ||
         _langkahCtrl.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -33,19 +46,19 @@ class _UploadPageState extends State<UploadPage> {
       return;
     }
 
-  final recipe = Recipe(
-    id: DateTime.now().millisecondsSinceEpoch,
-    nama: _namaCtrl.text,
-    asalDaerah: _asalCtrl.text,
-    deskripsi: _deskripsiCtrl.text,
-    porsi: _porsiCtrl.text,
-    waktuMemasak: _waktuCtrl.text,
-    urlGambar: _fotoCtrl.text,
-    tagMakanan: ["Upload"],
-    bahan: _bahanCtrl.text.split("\n"),
-    langkah: _langkahCtrl.text.split("\n"), // <-- ini yang benar
-  );
-
+    final recipe = Recipe(
+      id: DateTime.now().millisecondsSinceEpoch,
+      nama: _namaCtrl.text,
+      asalDaerah: _asalCtrl.text,
+      deskripsi: _deskripsiCtrl.text,
+      urlGambar: _imageFile!.path,     // <-- SIMPAN PATH GAMBAR
+      localImage: null,                // <-- kamu tidak pakai base64
+      tagMakanan: ["Upload"],
+      porsi: _porsiCtrl.text,
+      waktuMemasak: _waktuCtrl.text,
+      bahan: _bahanCtrl.text.split("\n"),
+      langkahMemasak: _langkahCtrl.text.split("\n"),  // <-- SESUAI MODEL
+    );
 
     HiveService.addUploadedRecipe(recipe);
 
@@ -91,9 +104,60 @@ class _UploadPageState extends State<UploadPage> {
             _input("Deskripsi Masakan", _deskripsiCtrl, maxLines: 3),
             _input("Porsi (cth: 2 Porsi)", _porsiCtrl),
             _input("Waktu Memasak (cth: 15 menit)", _waktuCtrl),
-            _input("Link Foto Makanan", _fotoCtrl),
-            _input("Bahan-bahan (pisahkan dengan ENTER)", _bahanCtrl, maxLines: 6),
-            _input("Langkah Memasak (pisahkan dengan ENTER)", _langkahCtrl, maxLines: 6),
+
+            // ==========================
+            //     PICK FOTO
+            // ==========================
+            Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text("Foto Masakan", style: TextStyle(fontSize: 16)),
+                  const SizedBox(height: 8),
+
+                  if (_imageFile != null)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.file(
+                        _imageFile!,
+                        height: 150,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+
+                  const SizedBox(height: 12),
+
+                  Row(
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: () => _pickImage(ImageSource.camera),
+                        icon: const Icon(Icons.camera_alt),
+                        label: const Text("Kamera"),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _primary,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      ElevatedButton.icon(
+                        onPressed: () => _pickImage(ImageSource.gallery),
+                        icon: const Icon(Icons.photo_library),
+                        label: const Text("Galeri"),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _primary,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            _input("Bahan-bahan (ENTER untuk ganti baris)", _bahanCtrl, maxLines: 6),
+            _input("Langkah Memasak (ENTER untuk ganti baris)", _langkahCtrl, maxLines: 6),
 
             const SizedBox(height: 20),
             ElevatedButton(
