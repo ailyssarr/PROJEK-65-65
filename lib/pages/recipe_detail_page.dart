@@ -145,103 +145,48 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
             ),
             const SizedBox(height: 16),
 
-            // ESTIMASI BIAYA
-            _buildSectionCard(
-              title: 'Estimasi Biaya Belanja',
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Text('Mata uang: '),
-                      DropdownButton<Currency>(
-                        value: _selectedCurrency,
-                        items: Currency.values
-                            .map(
-                              (c) => DropdownMenuItem(
-                                value: c,
-                                child: Text(currencyLabel(c)),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (val) {
-                          if (val == null) return;
-                          setState(() => _selectedCurrency = val);
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    formatCurrency(converted, _selectedCurrency),
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Perkiraan dalam IDR: ${formatCurrency(_baseCostIdr, Currency.idr)}',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontStyle: FontStyle.italic,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // JADWAL MASAK
-            _buildSectionCard(
-              title: 'Jadwal Masak & Zona Waktu',
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.schedule, size: 18),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          'Mulai masak (WIB): ${formatDateTime(_startTimeWib)}',
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: _pickTime,
-                        child: const Text('Ubah'),
-                      ),
-                    ],
-                  ),
-                  const Divider(),
-                  _buildTimeRow(AppTimeZone.wita),
-                  _buildTimeRow(AppTimeZone.wit),
-                  _buildTimeRow(AppTimeZone.london),
-                ],
-              ),
-            ),
-
             // BAHAN
             _buildSectionCard(
               title: 'Bahan-bahan',
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: r.bahan.map((b) => Text('• $b')).toList(),
+                children: r.bahan.map((b) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "• ",
+                        style: TextStyle(height: 1.4),
+                      ),
+                      Expanded(
+                        child: Text(
+                          b,
+                          style: const TextStyle(height: 1.4),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+
               ),
             ),
 
             // LANGKAH
             _buildSectionCard(
-              title: 'Langkah Memasak',
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: r.langkahMemasak.asMap().entries.map((e) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
-                    child: Text('${e.key + 1}. ${e.value}'),
-                  );
-                }).toList(),
-              ),
+            title: 'Langkah Memasak',
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: r.langkah.asMap().entries.map((e) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Text('${e.key + 1}. ${e.value}'),
+                );
+              }).toList(),
             ),
+          ),
           ],
         ),
       ),

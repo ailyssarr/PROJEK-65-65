@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'recipes_page.dart';
 import 'favorites_page.dart';
-import 'kesan_pesan_page.dart';
+import 'recipes_page.dart';
+import 'upload_page.dart';
 import 'profile_page.dart';
 
 class HomeShell extends StatefulWidget {
@@ -12,41 +12,43 @@ class HomeShell extends StatefulWidget {
 }
 
 class _HomeShellState extends State<HomeShell> {
-  int _index = 0;
+  int _selectedIndex = 0;
 
-  final _pages = const [
+  final List<Widget> _pages = [
     RecipesPage(),
     FavoritesPage(),
-    KesanPesanPage(),
+    UploadPage(),
     ProfilePage(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_index],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _index,
-        selectedItemColor: const Color(0xFFFFB074),
-        unselectedItemColor: Colors.grey,
-        type: BottomNavigationBarType.fixed,
-        onTap: (i) => setState(() => _index = i),
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            label: 'Beranda',
+      body: _pages[_selectedIndex],
+
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _selectedIndex,
+        onDestinationSelected: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.restaurant_menu_outlined),
+            label: "Recipes",
           ),
-          BottomNavigationBarItem(
+          NavigationDestination(
             icon: Icon(Icons.favorite_outline),
-            label: 'Favorit',
+            label: "Favorites",
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.edit_outlined),
-            label: 'Kesan',
+          NavigationDestination(
+            icon: Icon(Icons.upload_outlined),
+            label: "Upload",
           ),
-          BottomNavigationBarItem(
+          NavigationDestination(
             icon: Icon(Icons.person_outline),
-            label: 'Profil',
+            label: "Profile",
           ),
         ],
       ),

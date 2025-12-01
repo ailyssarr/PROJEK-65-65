@@ -22,13 +22,13 @@ class _FavoritesPageState extends State<FavoritesPage> {
   @override
   void initState() {
     super.initState();
-    _load();
+    _loadData();
   }
 
-  Future<void> _load() async {
-    final data = await _api.fetchRecipes();
+  Future<void> _loadData() async {
+    final recipes = await _api.fetchRecipes();
     setState(() {
-      _all = data;
+      _all = recipes;
       _loading = false;
     });
   }
@@ -52,7 +52,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
               : ListView.builder(
                   padding: const EdgeInsets.all(16),
                   itemCount: favRecipes.length,
-                  itemBuilder: (c, i) {
+                  itemBuilder: (_, i) {
                     final r = favRecipes[i];
                     return Card(
                       margin: const EdgeInsets.only(bottom: 12),

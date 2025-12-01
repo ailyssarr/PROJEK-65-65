@@ -3,6 +3,7 @@ import '../models/recipe.dart';
 import '../services/api_service.dart';
 import '../services/hive_service.dart';
 import 'recipe_detail_page.dart';
+import 'upload_page.dart'; // ← TAMBAHAN
 
 class RecipesPage extends StatefulWidget {
   const RecipesPage({super.key});
@@ -15,6 +16,8 @@ class _RecipesPageState extends State<RecipesPage> {
   final _api = ApiService();
   List<Recipe> _all = [];
   List<Recipe> _filtered = [];
+  List<Recipe> _uploaded = []; // ← TAMBAHAN
+
   bool _loading = true;
   String _search = '';
 
@@ -33,19 +36,24 @@ class _RecipesPageState extends State<RecipesPage> {
 
   Future<void> _load() async {
     try {
-      final data = await _api.fetchRecipes();
+      final apiData = await _api.fetchRecipes();
+      final uploaded = HiveService.getUploadedRecipes(); // ← ambil dari hive
+
       final setArea = <String>{};
-      for (final r in data) {
+      for (final r in [...uploaded, ...apiData]) {
         setArea.add(r.asalDaerah);
       }
+
       final areas = ['Semua', ...setArea.toList()..sort()];
 
       setState(() {
-        _all = data;
+        _uploaded = uploaded;
+        _all = [...uploaded, ...apiData]; // ← gabungkan
         _areas = areas;
         _applyFilter();
         _loading = false;
       });
+
     } catch (e) {
       setState(() => _loading = false);
       if (!mounted) return;
@@ -71,9 +79,22 @@ class _RecipesPageState extends State<RecipesPage> {
 
     return Scaffold(
       backgroundColor: _bgColor,
+
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: _primary,
+        child: const Icon(Icons.upload),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const UploadPage()),
+          ).then((_) => _load()); // reload setelah upload
+        },
+      ),
+
       body: SafeArea(
         child: Column(
           children: [
+
             // HEADER
             Container(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
@@ -91,6 +112,7 @@ class _RecipesPageState extends State<RecipesPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+
                   Row(
                     children: [
                       const CircleAvatar(
@@ -120,15 +142,15 @@ class _RecipesPageState extends State<RecipesPage> {
                       ),
                     ],
                   ),
+
                   const SizedBox(height: 16),
+
                   TextField(
                     decoration: InputDecoration(
                       hintText: 'Cari resep / daerah asal...',
                       prefixIcon: const Icon(Icons.search),
                       filled: true,
                       fillColor: Colors.white,
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 0),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide.none,
@@ -141,17 +163,16 @@ class _RecipesPageState extends State<RecipesPage> {
                       });
                     },
                   ),
+
                   const SizedBox(height: 8),
+
                   Row(
                     children: [
-                      const Icon(Icons.filter_list,
-                          color: Colors.white70, size: 18),
+                      const Icon(Icons.filter_list, color: Colors.white70, size: 18),
                       const SizedBox(width: 6),
-                      const Text(
-                        'Filter daerah:',
-                        style: TextStyle(color: Colors.white70),
-                      ),
+                      const Text('Filter daerah:', style: TextStyle(color: Colors.white70)),
                       const SizedBox(width: 8),
+
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10),
                         decoration: BoxDecoration(
@@ -163,12 +184,10 @@ class _RecipesPageState extends State<RecipesPage> {
                             dropdownColor: Colors.white,
                             value: _selectedArea,
                             items: _areas
-                                .map(
-                                  (a) => DropdownMenuItem(
-                                    value: a,
-                                    child: Text(a),
-                                  ),
-                                )
+                                .map((a) => DropdownMenuItem(
+                                      value: a,
+                                      child: Text(a),
+                                    ))
                                 .toList(),
                             onChanged: (val) {
                               if (val == null) return;
@@ -193,25 +212,23 @@ class _RecipesPageState extends State<RecipesPage> {
                   : RefreshIndicator(
                       onRefresh: _load,
                       child: ListView.builder(
-                        padding:
-                            const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
                         itemCount: _filtered.length,
                         itemBuilder: (context, i) {
                           final r = _filtered[i];
                           final isFav = HiveService.isFavorite(r.id);
+
                           return GestureDetector(
                             onTap: () {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) =>
-                                      RecipeDetailPage(recipe: r),
+                                  builder: (_) => RecipeDetailPage(recipe: r),
                                 ),
                               ).then((_) => setState(() {}));
                             },
                             child: Container(
-                              margin:
-                                  const EdgeInsets.only(bottom: 12),
+                              margin: const EdgeInsets.only(bottom: 12),
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(18),
@@ -226,8 +243,7 @@ class _RecipesPageState extends State<RecipesPage> {
                               child: Row(
                                 children: [
                                   ClipRRect(
-                                    borderRadius:
-                                        const BorderRadius.only(
+                                    borderRadius: const BorderRadius.only(
                                       topLeft: Radius.circular(18),
                                       bottomLeft: Radius.circular(18),
                                     ),
@@ -240,23 +256,18 @@ class _RecipesPageState extends State<RecipesPage> {
                                   ),
                                   Expanded(
                                     child: Padding(
-                                      padding:
-                                          const EdgeInsets.symmetric(
-                                              horizontal: 12,
-                                              vertical: 10),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 12, vertical: 10),
                                       child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             r.nama,
                                             maxLines: 1,
-                                            overflow:
-                                                TextOverflow.ellipsis,
+                                            overflow: TextOverflow.ellipsis,
                                             style: const TextStyle(
                                               fontSize: 16,
-                                              fontWeight:
-                                                  FontWeight.w600,
+                                              fontWeight: FontWeight.w600,
                                             ),
                                           ),
                                           const SizedBox(height: 4),
@@ -264,23 +275,18 @@ class _RecipesPageState extends State<RecipesPage> {
                                             r.asalDaerah,
                                             style: TextStyle(
                                               fontSize: 13,
-                                              color: Colors
-                                                  .grey.shade600,
+                                              color: Colors.grey.shade600,
                                             ),
                                           ),
                                           const SizedBox(height: 6),
                                           Row(
                                             children: [
-                                              const Icon(
-                                                Icons.schedule,
-                                                size: 14,
-                                                color: Colors.orange,
-                                              ),
+                                              const Icon(Icons.schedule,
+                                                  size: 14, color: Colors.orange),
                                               const SizedBox(width: 4),
                                               Text(
                                                 r.waktuMemasak,
-                                                style: const TextStyle(
-                                                    fontSize: 12),
+                                                style: const TextStyle(fontSize: 12),
                                               ),
                                             ],
                                           ),
@@ -290,13 +296,8 @@ class _RecipesPageState extends State<RecipesPage> {
                                   ),
                                   IconButton(
                                     icon: Icon(
-                                      isFav
-                                          ? Icons.favorite
-                                          : Icons
-                                              .favorite_border_outlined,
-                                      color: isFav
-                                          ? Colors.red
-                                          : Colors.grey[400],
+                                      isFav ? Icons.favorite : Icons.favorite_border_outlined,
+                                      color: isFav ? Colors.red : Colors.grey[400],
                                     ),
                                     onPressed: () {
                                       HiveService.toggleFavorite(r.id);
