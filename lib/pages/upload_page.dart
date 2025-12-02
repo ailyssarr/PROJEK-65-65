@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+
+// IMPORT FIX
 import '../models/recipe.dart';
 import '../services/hive_service.dart';
 
@@ -26,7 +28,8 @@ class _UploadPageState extends State<UploadPage> {
   final ImagePicker _picker = ImagePicker();
 
   Future<void> _pickImage(ImageSource source) async {
-    final XFile? picked = await _picker.pickImage(source: source);
+    final picked = await _picker.pickImage(source: source);
+
     if (picked != null) {
       setState(() {
         _imageFile = File(picked.path);
@@ -47,17 +50,17 @@ class _UploadPageState extends State<UploadPage> {
     }
 
     final recipe = Recipe(
-      id: DateTime.now().millisecondsSinceEpoch,
+      id: DateTime.now().microsecondsSinceEpoch & 0xFFFFFFFF,
       nama: _namaCtrl.text,
       asalDaerah: _asalCtrl.text,
       deskripsi: _deskripsiCtrl.text,
-      urlGambar: _imageFile!.path,     // <-- SIMPAN PATH GAMBAR
-      localImage: null,                // <-- kamu tidak pakai base64
+      urlGambar: _imageFile!.path,
+      localImage: null,
       tagMakanan: ["Upload"],
       porsi: _porsiCtrl.text,
       waktuMemasak: _waktuCtrl.text,
       bahan: _bahanCtrl.text.split("\n"),
-      langkahMemasak: _langkahCtrl.text.split("\n"),  // <-- SESUAI MODEL
+      langkahMemasak: _langkahCtrl.text.split("\n"),
     );
 
     HiveService.addUploadedRecipe(recipe);
@@ -105,9 +108,7 @@ class _UploadPageState extends State<UploadPage> {
             _input("Porsi (cth: 2 Porsi)", _porsiCtrl),
             _input("Waktu Memasak (cth: 15 menit)", _waktuCtrl),
 
-            // ==========================
-            //     PICK FOTO
-            // ==========================
+            // Pick Image
             Container(
               margin: const EdgeInsets.only(bottom: 16),
               child: Column(

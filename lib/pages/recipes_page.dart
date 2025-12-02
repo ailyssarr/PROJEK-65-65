@@ -1,9 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../models/recipe.dart';
 import '../services/api_service.dart';
 import '../services/hive_service.dart';
 import 'recipe_detail_page.dart';
-import 'upload_page.dart'; // ← TAMBAHAN
+import 'upload_page.dart';
 
 class RecipesPage extends StatefulWidget {
   const RecipesPage({super.key});
@@ -16,7 +17,7 @@ class _RecipesPageState extends State<RecipesPage> {
   final _api = ApiService();
   List<Recipe> _all = [];
   List<Recipe> _filtered = [];
-  List<Recipe> _uploaded = []; // ← TAMBAHAN
+  List<Recipe> _uploaded = [];
 
   bool _loading = true;
   String _search = '';
@@ -34,10 +35,35 @@ class _RecipesPageState extends State<RecipesPage> {
     _load();
   }
 
+  // FIX GAMBAR – auto pilih network / file lokal + thumbnail
+  Widget _buildRecipeImage(String path) {
+    final isNetwork = path.startsWith("http");
+
+    if (isNetwork) {
+      return Image.network(
+        path,
+        width: 90,
+        height: 90,
+        fit: BoxFit.cover,
+      );
+    } else {
+      return Image.file(
+        File(path),
+        width: 90,
+        height: 90,
+        fit: BoxFit.cover,
+
+        // Thumbnail agar tidak lag
+        cacheWidth: 200,
+        cacheHeight: 200,
+      );
+    }
+  }
+
   Future<void> _load() async {
     try {
       final apiData = await _api.fetchRecipes();
-      final uploaded = HiveService.getUploadedRecipes(); // ← ambil dari hive
+      final uploaded = HiveService.getUploadedRecipes();
 
       final setArea = <String>{};
       for (final r in [...uploaded, ...apiData]) {
@@ -48,18 +74,16 @@ class _RecipesPageState extends State<RecipesPage> {
 
       setState(() {
         _uploaded = uploaded;
-        _all = [...uploaded, ...apiData]; // ← gabungkan
+        _all = [...uploaded, ...apiData];
         _areas = areas;
         _applyFilter();
         _loading = false;
       });
-
     } catch (e) {
       setState(() => _loading = false);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal memuat resep: $e')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Gagal memuat resep: $e")));
     }
   }
 
@@ -67,8 +91,10 @@ class _RecipesPageState extends State<RecipesPage> {
     _filtered = _all.where((r) {
       final matchSearch = r.nama.toLowerCase().contains(_search.toLowerCase()) ||
           r.asalDaerah.toLowerCase().contains(_search.toLowerCase());
+
       final matchArea =
           _selectedArea == 'Semua' || r.asalDaerah == _selectedArea;
+
       return matchSearch && matchArea;
     }).toList();
   }
@@ -83,18 +109,18 @@ class _RecipesPageState extends State<RecipesPage> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: _primary,
         child: const Icon(Icons.upload),
-        onPressed: () {
-          Navigator.push(
+        onPressed: () async {
+          await Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const UploadPage()),
-          ).then((_) => _load()); // reload setelah upload
+          );
+          _load();
         },
       ),
 
       body: SafeArea(
         child: Column(
           children: [
-
             // HEADER
             Container(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
@@ -112,7 +138,6 @@ class _RecipesPageState extends State<RecipesPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
                   Row(
                     children: [
                       const CircleAvatar(
@@ -170,7 +195,8 @@ class _RecipesPageState extends State<RecipesPage> {
                     children: [
                       const Icon(Icons.filter_list, color: Colors.white70, size: 18),
                       const SizedBox(width: 6),
-                      const Text('Filter daerah:', style: TextStyle(color: Colors.white70)),
+                      const Text('Filter daerah:',
+                          style: TextStyle(color: Colors.white70)),
                       const SizedBox(width: 8),
 
                       Container(
@@ -219,13 +245,14 @@ class _RecipesPageState extends State<RecipesPage> {
                           final isFav = HiveService.isFavorite(r.id);
 
                           return GestureDetector(
-                            onTap: () {
-                              Navigator.push(
+                            onTap: () async {
+                              await Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (_) => RecipeDetailPage(recipe: r),
                                 ),
-                              ).then((_) => setState(() {}));
+                              );
+                              if (mounted) setState(() {});
                             },
                             child: Container(
                               margin: const EdgeInsets.only(bottom: 12),
@@ -247,19 +274,15 @@ class _RecipesPageState extends State<RecipesPage> {
                                       topLeft: Radius.circular(18),
                                       bottomLeft: Radius.circular(18),
                                     ),
-                                    child: Image.network(
-                                      r.urlGambar,
-                                      width: 90,
-                                      height: 90,
-                                      fit: BoxFit.cover,
-                                    ),
+                                    child: _buildRecipeImage(r.urlGambar),
                                   ),
                                   Expanded(
                                     child: Padding(
                                       padding: const EdgeInsets.symmetric(
                                           horizontal: 12, vertical: 10),
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             r.nama,
@@ -286,7 +309,8 @@ class _RecipesPageState extends State<RecipesPage> {
                                               const SizedBox(width: 4),
                                               Text(
                                                 r.waktuMemasak,
-                                                style: const TextStyle(fontSize: 12),
+                                                style: const TextStyle(
+                                                    fontSize: 12),
                                               ),
                                             ],
                                           ),
@@ -296,8 +320,11 @@ class _RecipesPageState extends State<RecipesPage> {
                                   ),
                                   IconButton(
                                     icon: Icon(
-                                      isFav ? Icons.favorite : Icons.favorite_border_outlined,
-                                      color: isFav ? Colors.red : Colors.grey[400],
+                                      isFav
+                                          ? Icons.favorite
+                                          : Icons.favorite_border_outlined,
+                                      color:
+                                          isFav ? Colors.red : Colors.grey[400],
                                     ),
                                     onPressed: () {
                                       HiveService.toggleFavorite(r.id);
