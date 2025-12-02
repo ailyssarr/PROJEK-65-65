@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 
-// IMPORT FIX
 import '../models/recipe.dart';
 import '../services/hive_service.dart';
 
@@ -27,6 +27,20 @@ class _UploadPageState extends State<UploadPage> {
   File? _imageFile;
   final ImagePicker _picker = ImagePicker();
 
+  // Simpan gambar ke direktori aplikasi
+  Future<void> _saveImageToAppDirectory(File imageFile) async {
+    final directory = await getApplicationDocumentsDirectory();
+    final fileName = "${DateTime.now().millisecondsSinceEpoch}.jpg";
+    final localImage = File("${directory.path}/$fileName");
+
+    await imageFile.copy(localImage.path);
+
+    setState(() {
+      _imageFile = localImage;
+    });
+  }
+
+  // Ambil gambar
   Future<void> _pickImage(ImageSource source) async {
     final picked = await _picker.pickImage(source: source);
 
@@ -34,9 +48,12 @@ class _UploadPageState extends State<UploadPage> {
       setState(() {
         _imageFile = File(picked.path);
       });
+
+      await _saveImageToAppDirectory(_imageFile!);
     }
   }
 
+  // Simpan resep ke Hive
   void _save() {
     if (_namaCtrl.text.isEmpty ||
         _deskripsiCtrl.text.isEmpty ||
@@ -83,7 +100,7 @@ class _UploadPageState extends State<UploadPage> {
           filled: true,
           fillColor: Colors.white,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(12.0),
           ),
         ),
       ),
@@ -108,7 +125,7 @@ class _UploadPageState extends State<UploadPage> {
             _input("Porsi (cth: 2 Porsi)", _porsiCtrl),
             _input("Waktu Memasak (cth: 15 menit)", _waktuCtrl),
 
-            // Pick Image
+            // FOTO
             Container(
               margin: const EdgeInsets.only(bottom: 16),
               child: Column(
@@ -116,10 +133,9 @@ class _UploadPageState extends State<UploadPage> {
                 children: [
                   const Text("Foto Masakan", style: TextStyle(fontSize: 16)),
                   const SizedBox(height: 8),
-
                   if (_imageFile != null)
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(12.0),
                       child: Image.file(
                         _imageFile!,
                         height: 150,
@@ -127,9 +143,7 @@ class _UploadPageState extends State<UploadPage> {
                         fit: BoxFit.cover,
                       ),
                     ),
-
                   const SizedBox(height: 12),
-
                   Row(
                     children: [
                       ElevatedButton.icon(
@@ -157,22 +171,33 @@ class _UploadPageState extends State<UploadPage> {
               ),
             ),
 
-            _input("Bahan-bahan (ENTER untuk ganti baris)", _bahanCtrl, maxLines: 6),
-            _input("Langkah Memasak (ENTER untuk ganti baris)", _langkahCtrl, maxLines: 6),
+            _input(
+              "Bahan-bahan (ENTER untuk ganti baris)",
+              _bahanCtrl,
+              maxLines: 6,
+            ),
+            _input(
+              "Langkah Memasak (ENTER untuk ganti baris)",
+              _langkahCtrl,
+              maxLines: 6,
+            ),
 
             const SizedBox(height: 20),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: _primary,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 30,
+                  vertical: 14,
+                ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(14.0),
                 ),
               ),
               onPressed: _save,
               child: const Text("Upload Resep"),
-            )
+            ),
           ],
         ),
       ),

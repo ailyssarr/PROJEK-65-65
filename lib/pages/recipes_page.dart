@@ -21,7 +21,6 @@ class _RecipesPageState extends State<RecipesPage> {
 
   bool _loading = true;
   String _search = '';
-
   String _selectedArea = 'Semua';
   List<String> _areas = ['Semua'];
 
@@ -35,7 +34,6 @@ class _RecipesPageState extends State<RecipesPage> {
     _load();
   }
 
-  // FIX GAMBAR – auto pilih network / file lokal + thumbnail
   Widget _buildRecipeImage(String path) {
     final isNetwork = path.startsWith("http");
 
@@ -52,8 +50,6 @@ class _RecipesPageState extends State<RecipesPage> {
         width: 90,
         height: 90,
         fit: BoxFit.cover,
-
-        // Thumbnail agar tidak lag
         cacheWidth: 200,
         cacheHeight: 200,
       );
@@ -105,7 +101,6 @@ class _RecipesPageState extends State<RecipesPage> {
 
     return Scaffold(
       backgroundColor: _bgColor,
-
       floatingActionButton: FloatingActionButton(
         backgroundColor: _primary,
         child: const Icon(Icons.upload),
@@ -113,15 +108,12 @@ class _RecipesPageState extends State<RecipesPage> {
           await Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const UploadPage()),
-          );
-          _load();
+          ).then((_) => _load());
         },
       ),
-
       body: SafeArea(
         child: Column(
           children: [
-            // HEADER
             Container(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
               decoration: BoxDecoration(
@@ -167,9 +159,7 @@ class _RecipesPageState extends State<RecipesPage> {
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 16),
-
                   TextField(
                     decoration: InputDecoration(
                       hintText: 'Cari resep / daerah asal...',
@@ -188,17 +178,16 @@ class _RecipesPageState extends State<RecipesPage> {
                       });
                     },
                   ),
-
                   const SizedBox(height: 8),
-
                   Row(
                     children: [
                       const Icon(Icons.filter_list, color: Colors.white70, size: 18),
                       const SizedBox(width: 6),
-                      const Text('Filter daerah:',
-                          style: TextStyle(color: Colors.white70)),
+                      const Text(
+                        'Filter daerah:',
+                        style: TextStyle(color: Colors.white70),
+                      ),
                       const SizedBox(width: 8),
-
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10),
                         decoration: BoxDecoration(
@@ -230,8 +219,6 @@ class _RecipesPageState extends State<RecipesPage> {
                 ],
               ),
             ),
-
-            // LIST
             Expanded(
               child: _loading
                   ? const Center(child: CircularProgressIndicator())
@@ -251,8 +238,7 @@ class _RecipesPageState extends State<RecipesPage> {
                                 MaterialPageRoute(
                                   builder: (_) => RecipeDetailPage(recipe: r),
                                 ),
-                              );
-                              if (mounted) setState(() {});
+                              ).then((_) => setState(() {}));
                             },
                             child: Container(
                               margin: const EdgeInsets.only(bottom: 12),
@@ -304,8 +290,11 @@ class _RecipesPageState extends State<RecipesPage> {
                                           const SizedBox(height: 6),
                                           Row(
                                             children: [
-                                              const Icon(Icons.schedule,
-                                                  size: 14, color: Colors.orange),
+                                              const Icon(
+                                                Icons.schedule,
+                                                size: 14,
+                                                color: Colors.orange,
+                                              ),
                                               const SizedBox(width: 4),
                                               Text(
                                                 r.waktuMemasak,
@@ -323,8 +312,9 @@ class _RecipesPageState extends State<RecipesPage> {
                                       isFav
                                           ? Icons.favorite
                                           : Icons.favorite_border_outlined,
-                                      color:
-                                          isFav ? Colors.red : Colors.grey[400],
+                                      color: isFav
+                                          ? Colors.red
+                                          : Colors.grey[400],
                                     ),
                                     onPressed: () {
                                       HiveService.toggleFavorite(r.id);

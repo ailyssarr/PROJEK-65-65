@@ -22,7 +22,7 @@ class HiveService {
 
     await Hive.openBox(uploadedBox);        // upload resep
     await Hive.openBox(sessionBoxName);     // session
-    await Hive.openBox(favBoxName);         // favorite
+    await Hive.openBox(favBoxName);         // favorit
 
     // AES encrypted box untuk user
     final key = sha256.convert(utf8.encode('foodmate-secret-key')).bytes;
@@ -135,7 +135,7 @@ class HiveService {
   // ===============================
   static void addUploadedRecipe(Recipe recipe) {
     final box = Hive.box(uploadedBox);
-    box.add(recipe.toMap());   // simpan MAP ke Hive
+    box.add(recipe.toMap()); // simpan MAP ke Hive
   }
 
   static List<Recipe> getUploadedRecipes() {

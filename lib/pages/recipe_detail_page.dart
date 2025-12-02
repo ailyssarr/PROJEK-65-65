@@ -16,7 +16,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
   late DateTime _startTimeWib;
   Currency _selectedCurrency = Currency.idr;
 
-  // fallback cost jika id tidak ada di map
+  // cost map dengan integer ID
   final Map<int, double> _costMap = {
     1: 80000,
     2: 65000,
@@ -83,10 +83,9 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ============================
-            // GAMBAR FIX (LOCAL / NETWORK)
+            // GAMBAR LOCAL & NETWORK
             // ============================
             _buildRecipeImage(r.urlGambar),
-
             const SizedBox(height: 14),
 
             Text(
@@ -142,7 +141,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
             ),
 
             // ============================
-            // LANGKAH
+            // LANGKAH MEMASAK
             // ============================
             _buildSectionCard(
               title: 'Langkah Memasak',
@@ -217,7 +216,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.0),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.03),
