@@ -10,6 +10,7 @@ class HiveService {
   static const favBoxName = 'favBox';
   static const uploadedBox = 'uploaded_recipes'; // 🔥 buat upload resep
 
+  // Inisialisasi Hive
   static Future<void> init() async {
     await Hive.initFlutter();
 
@@ -22,11 +23,10 @@ class HiveService {
 
     await Hive.openBox(usersBoxName, encryptionCipher: cipher);
     await Hive.openBox(sessionBoxName);
-    await Hive.openBox(favBoxName);
+    await Hive.openBox(favBoxName); // Pastikan favBox dibuka
   }
 
-  static String _hash(String s) =>
-      sha256.convert(utf8.encode(s)).toString();
+  static String _hash(String s) => sha256.convert(utf8.encode(s)).toString();
 
   // ===================== REGISTER =====================
   static String? register(String name, String email, String password) {
@@ -93,30 +93,32 @@ class HiveService {
     return 'fav_$email';
   }
 
-  static List<int> getFavoriteIds() {
+  static List<String> getFavoriteIds() {
     final box = Hive.box(favBoxName);
     final list =
-        box.get(_userFavKey(), defaultValue: <int>[]) as List<dynamic>;
-    return list.cast<int>();
+        box.get(_userFavKey(), defaultValue: <String>[]) as List<dynamic>;
+    return list.cast<String>();
   }
 
-  static bool isFavorite(int id) => getFavoriteIds().contains(id);
+  // Memeriksa apakah resep ada di favorit
+  static bool isFavorite(String id) => getFavoriteIds().contains(id);
 
-  static void toggleFavorite(int id) {
+  // Menambah atau menghapus favorit
+  static void toggleFavorite(String id) {
     final box = Hive.box(favBoxName);
     final list = getFavoriteIds();
 
     if (list.contains(id)) {
-      list.remove(id);
+      list.remove(id); // Jika sudah favorit, hapus
     } else {
-      list.add(id);
+      list.add(id); // Jika belum favorit, tambahkan
     }
 
+    // Update list favorit di Hive
     box.put(_userFavKey(), list);
   }
 
   // ===================== UPLOADED RECIPES =====================
-
   static void addUploadedRecipe(Recipe recipe) {
     final box = Hive.box(uploadedBox);
     box.put(recipe.id, recipe.toMap());

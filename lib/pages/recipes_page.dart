@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/recipe.dart';
-import '../services/api_service.dart';
+import '../services/api_service.dart';  // Pastikan ApiService diimpor
 import '../services/hive_service.dart';
 import 'recipe_detail_page.dart';
 import 'upload_page.dart'; // ← TAMBAHAN
@@ -13,14 +13,13 @@ class RecipesPage extends StatefulWidget {
 }
 
 class _RecipesPageState extends State<RecipesPage> {
-  final _api = ApiService();
+  final _api = ApiService();  // Pastikan ApiService digunakan
   List<Recipe> _all = [];
   List<Recipe> _filtered = [];
-  List<Recipe> _uploaded = []; // ← TAMBAHAN
+  List<Recipe> _uploaded = [];
 
   bool _loading = true;
   String _search = '';
-
   String _selectedArea = 'Semua';
   List<String> _areas = ['Semua'];
 
@@ -37,7 +36,7 @@ class _RecipesPageState extends State<RecipesPage> {
   Future<void> _load() async {
     try {
       final apiData = await _api.fetchRecipes();
-      final uploaded = HiveService.getUploadedRecipes(); // ← ambil dari hive
+      final uploaded = HiveService.getUploadedRecipes();
 
       final setArea = <String>{};
       for (final r in [...uploaded, ...apiData]) {
@@ -48,7 +47,7 @@ class _RecipesPageState extends State<RecipesPage> {
 
       setState(() {
         _uploaded = uploaded;
-        _all = [...uploaded, ...apiData]; // ← gabungkan
+        _all = [...uploaded, ...apiData];
         _areas = areas;
         _applyFilter();
         _loading = false;
@@ -79,7 +78,6 @@ class _RecipesPageState extends State<RecipesPage> {
 
     return Scaffold(
       backgroundColor: _bgColor,
-
       floatingActionButton: FloatingActionButton(
         backgroundColor: _primary,
         child: const Icon(Icons.upload),
@@ -87,14 +85,12 @@ class _RecipesPageState extends State<RecipesPage> {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const UploadPage()),
-          ).then((_) => _load()); // reload setelah upload
+          ).then((_) => _load());  // Reload setelah upload
         },
       ),
-
       body: SafeArea(
         child: Column(
           children: [
-
             // HEADER
             Container(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
@@ -112,7 +108,6 @@ class _RecipesPageState extends State<RecipesPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
                   Row(
                     children: [
                       const CircleAvatar(
@@ -142,9 +137,7 @@ class _RecipesPageState extends State<RecipesPage> {
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 16),
-
                   TextField(
                     decoration: InputDecoration(
                       hintText: 'Cari resep / daerah asal...',
@@ -163,16 +156,13 @@ class _RecipesPageState extends State<RecipesPage> {
                       });
                     },
                   ),
-
                   const SizedBox(height: 8),
-
                   Row(
                     children: [
                       const Icon(Icons.filter_list, color: Colors.white70, size: 18),
                       const SizedBox(width: 6),
                       const Text('Filter daerah:', style: TextStyle(color: Colors.white70)),
                       const SizedBox(width: 8),
-
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10),
                         decoration: BoxDecoration(
@@ -204,7 +194,6 @@ class _RecipesPageState extends State<RecipesPage> {
                 ],
               ),
             ),
-
             // LIST
             Expanded(
               child: _loading
@@ -225,7 +214,7 @@ class _RecipesPageState extends State<RecipesPage> {
                                 MaterialPageRoute(
                                   builder: (_) => RecipeDetailPage(recipe: r),
                                 ),
-                              ).then((_) => setState(() {}));
+                              ).then((_) => setState(() {})); // Memanggil setState() untuk reload
                             },
                             child: Container(
                               margin: const EdgeInsets.only(bottom: 12),
@@ -296,7 +285,9 @@ class _RecipesPageState extends State<RecipesPage> {
                                   ),
                                   IconButton(
                                     icon: Icon(
-                                      isFav ? Icons.favorite : Icons.favorite_border_outlined,
+                                      isFav
+                                          ? Icons.favorite
+                                          : Icons.favorite_border_outlined,
                                       color: isFav ? Colors.red : Colors.grey[400],
                                     ),
                                     onPressed: () {

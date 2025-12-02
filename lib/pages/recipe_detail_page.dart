@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../models/recipe.dart';
 import '../services/hive_service.dart';
@@ -15,7 +16,12 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
   late DateTime _startTimeWib;
   Currency _selectedCurrency = Currency.idr;
 
-  final Map<int, double> _costMap = {1: 80000, 2: 65000, 3: 50000, 4: 45000};
+  final Map<String, double> _costMap = {
+    '1': 80000,
+    '2': 65000,
+    '3': 50000,
+    '4': 45000,
+  };
 
   final Color _bgColor = const Color(0xFFFFF7F0);
   final Color _primary = const Color(0xFFFFB074);
@@ -49,6 +55,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
               color: Colors.white,
             ),
             onPressed: () {
+              // Toggle favorite status
               HiveService.toggleFavorite(r.id);
               setState(() {});
               ScaffoldMessenger.of(context).showSnackBar(
@@ -71,7 +78,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(20.0),
                   child: Image.network(r.urlGambar),
                 ),
                 Positioned(
@@ -84,7 +91,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                     ),
                     decoration: BoxDecoration(
                       color: Colors.black.withOpacity(0.45),
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(14.0),
                     ),
                     child: Row(
                       children: [
@@ -151,26 +158,19 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: r.bahan.map((b) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        "• ",
-                        style: TextStyle(height: 1.4),
-                      ),
-                      Expanded(
-                        child: Text(
-                          b,
-                          style: const TextStyle(height: 1.4),
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text("• ", style: TextStyle(height: 1.4)),
+                        Expanded(
+                          child: Text(b, style: const TextStyle(height: 1.4)),
                         ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
-
+                      ],
+                    ),
+                  );
+                }).toList(),
               ),
             ),
 
@@ -199,7 +199,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.0),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.03),

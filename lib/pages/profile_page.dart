@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:async';  
+import 'dart:async';
 import 'package:geolocator/geolocator.dart';
 import '../services/hive_service.dart';
 import 'login_page.dart';
@@ -40,15 +40,11 @@ class _ProfilePageState extends State<ProfilePage> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            const CircleAvatar(
-              radius: 40,
-              child: Icon(Icons.person, size: 40),
-            ),
+            const CircleAvatar(radius: 40, child: Icon(Icons.person, size: 40)),
             const SizedBox(height: 12),
             Text(
               name,
-              style:
-                  const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             Text(email),
             const SizedBox(height: 8),
@@ -78,7 +74,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   backgroundColor: _primary,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(12.0),
                   ),
                 ),
                 icon: const Icon(Icons.logout),
@@ -87,8 +83,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   HiveService.logout();
                   Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(
-                        builder: (context) => const LoginPage()),
+                    MaterialPageRoute(builder: (context) => const LoginPage()),
                     (route) => false,
                   );
                 },
@@ -101,58 +96,58 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _getLocation() async {
-  setState(() {
-    _locLoading = true;
-  });
+    setState(() {
+      _locLoading = true;
+    });
 
-  try {
-    // 1. cek dulu apakah layanan lokasi aktif
-    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
+    try {
+      // 1. cek dulu apakah layanan lokasi aktif
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        setState(() {
+          _locLoading = false;
+          _locationText =
+              'Layanan lokasi nonaktif. Aktifkan GPS / Location di perangkat/emulator.';
+        });
+        return;
+      }
+
+      // 2. cek & minta izin runtime
+      LocationPermission perm = await Geolocator.checkPermission();
+      if (perm == LocationPermission.denied) {
+        perm = await Geolocator.requestPermission();
+      }
+
+      if (perm == LocationPermission.denied ||
+          perm == LocationPermission.deniedForever) {
+        setState(() {
+          _locLoading = false;
+          _locationText =
+              'Izin lokasi ditolak. Buka pengaturan dan izinkan akses lokasi.';
+        });
+        return;
+      }
+
+      // 3. ambil posisi dengan timeout 10 detik
+      final pos = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      ).timeout(const Duration(seconds: 10));
+
       setState(() {
         _locLoading = false;
         _locationText =
-            'Layanan lokasi nonaktif. Aktifkan GPS / Location di perangkat/emulator.';
+            'Lat: ${pos.latitude.toStringAsFixed(4)}, Lng: ${pos.longitude.toStringAsFixed(4)}';
       });
-      return;
-    }
-
-    // 2. cek & minta izin runtime
-    LocationPermission perm = await Geolocator.checkPermission();
-    if (perm == LocationPermission.denied) {
-      perm = await Geolocator.requestPermission();
-    }
-
-    if (perm == LocationPermission.denied ||
-        perm == LocationPermission.deniedForever) {
+    } on TimeoutException {
       setState(() {
         _locLoading = false;
-        _locationText =
-            'Izin lokasi ditolak. Buka pengaturan dan izinkan akses lokasi.';
+        _locationText = 'Gagal mengambil lokasi (timeout). Coba lagi.';
       });
-      return;
+    } catch (e) {
+      setState(() {
+        _locLoading = false;
+        _locationText = 'Terjadi error lokasi: $e';
+      });
     }
-
-    // 3. ambil posisi dengan timeout 10 detik
-    final pos = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
-    ).timeout(const Duration(seconds: 10));
-
-    setState(() {
-      _locLoading = false;
-      _locationText =
-          'Lat: ${pos.latitude.toStringAsFixed(4)}, Lng: ${pos.longitude.toStringAsFixed(4)}';
-    });
-  } on TimeoutException {
-    setState(() {
-      _locLoading = false;
-      _locationText = 'Gagal mengambil lokasi (timeout). Coba lagi.';
-    });
-  } catch (e) {
-    setState(() {
-      _locLoading = false;
-      _locationText = 'Terjadi error lokasi: $e';
-    });
   }
-}
 }

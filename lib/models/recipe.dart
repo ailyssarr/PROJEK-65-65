@@ -1,10 +1,10 @@
 class Recipe {
-  final int id;
+  final String id;
   final String nama;
   final String asalDaerah;
   final String deskripsi;
-  final String urlGambar;           
-  final String? localImage;         
+  final String urlGambar;
+  final String? localImage;
   final List<String> tagMakanan;
   final String porsi;
   final String waktuMemasak;
@@ -30,7 +30,7 @@ class Recipe {
   // ============================
   factory Recipe.fromJson(Map<String, dynamic> json) {
     return Recipe(
-      id: json['id'] as int,
+      id: json['id'].toString(),
       nama: json['nama'] as String,
       asalDaerah: json['asal_daerah'] as String? ?? '',
       deskripsi: json['deskripsi'] as String? ?? '',
