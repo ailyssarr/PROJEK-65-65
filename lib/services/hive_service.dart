@@ -104,31 +104,33 @@ class HiveService {
   }
 
   // ===============================
-  // FAVORITE
-  // ===============================
-  static String _favKey() => 'fav_${getUserEmail()}';
+// FAVORITE
+// ===============================
+static String _favKey() => 'fav_${getUserEmail()}';
 
-  static List<int> getFavoriteIds() {
-    final box = Hive.box(favBoxName);
-    return List<int>.from(box.get(_favKey(), defaultValue: <int>[]));
+static List<String> getFavoriteIds() {
+  final box = Hive.box(favBoxName);
+  return List<String>.from(
+      box.get(_favKey(), defaultValue: <String>[]));
+}
+
+static bool isFavorite(String id) {
+  return getFavoriteIds().contains(id);
+}
+
+static void toggleFavorite(String id) {
+  final box = Hive.box(favBoxName);
+  final favs = getFavoriteIds();
+
+  if (favs.contains(id)) {
+    favs.remove(id);
+  } else {
+    favs.add(id);
   }
 
-  static bool isFavorite(int id) {
-    return getFavoriteIds().contains(id);
-  }
+  box.put(_favKey(), favs);
+}
 
-  static void toggleFavorite(int id) {
-    final box = Hive.box(favBoxName);
-    final favs = getFavoriteIds();
-
-    if (favs.contains(id)) {
-      favs.remove(id);
-    } else {
-      favs.add(id);
-    }
-
-    box.put(_favKey(), favs);
-  }
 
   // ===============================
   // UPLOADED RECIPES

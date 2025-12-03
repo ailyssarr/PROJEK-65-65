@@ -16,17 +16,15 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
   late DateTime _startTimeWib;
   Currency _selectedCurrency = Currency.idr;
 
-  // cost map dengan integer ID
-  final Map<int, double> _costMap = {
-    1: 80000,
-    2: 65000,
-    3: 50000,
-    4: 45000,
+  final Map<String, double> _costMap = {
+    '1': 80000,
+    '2': 65000,
+    '3': 50000,
+    '4': 45000,
   };
 
   final Color _bgColor = const Color(0xFFFFF7F0);
   final Color _primary = const Color(0xFFFFB074);
-  final Color _primaryDark = const Color(0xFFE58A45);
   final Color _chipBg = const Color(0xFFFFF0E2);
 
   @override
@@ -43,9 +41,9 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
 
     final bool isFav = HiveService.isFavorite(r.id);
 
-    final tagList = r.tagMakanan ?? [];
-    final bahanList = r.bahan ?? [];
-    final langkahList = r.langkahMemasak ?? [];
+    final tagList = r.tagMakanan;
+    final bahanList = r.bahan;
+    final langkahList = r.langkahMemasak;
 
     final convertedCost = convertFromIdr(_baseCostIdr, _selectedCurrency);
 
@@ -68,7 +66,9 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
-                    isFav ? 'Dihapus dari favorit' : 'Ditambahkan ke favorit',
+                    isFav
+                        ? 'Dihapus dari favorit'
+                        : 'Ditambahkan ke favorit',
                   ),
                 ),
               );
@@ -83,14 +83,15 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ============================
-            // GAMBAR LOCAL & NETWORK
+            // FIX IMAGE HANDLING
             // ============================
-            _buildRecipeImage(r.urlGambar),
+            _buildRecipeImage(r),
             const SizedBox(height: 14),
 
             Text(
               r.nama,
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              style:
+                  const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             Text(
               r.asalDaerah,
@@ -99,15 +100,19 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
 
             const SizedBox(height: 12),
 
-            // TAG MAKANAN
+            // ============================
+            // TAG
+            // ============================
             Wrap(
               spacing: 8,
               children: tagList
-                  .map((t) => Chip(
-                        label: Text(t),
-                        backgroundColor: _chipBg,
-                        labelStyle: const TextStyle(fontSize: 12),
-                      ))
+                  .map(
+                    (t) => Chip(
+                      label: Text(t),
+                      backgroundColor: _chipBg,
+                      labelStyle: const TextStyle(fontSize: 12),
+                    ),
+                  )
                   .toList(),
             ),
 
@@ -126,13 +131,8 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text("• ", style: TextStyle(height: 1.4)),
-                        Expanded(
-                          child: Text(
-                            b,
-                            style: const TextStyle(height: 1.4),
-                          ),
-                        ),
+                        const Text("• "),
+                        Expanded(child: Text(b)),
                       ],
                     ),
                   );
@@ -141,7 +141,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
             ),
 
             // ============================
-            // LANGKAH MEMASAK
+            // LANGKAH
             // ============================
             _buildSectionCard(
               title: 'Langkah Memasak',
@@ -162,29 +162,19 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
   }
 
   // ==================================
-  // GAMBAR LOCAL & NETWORK HANDLER
+  // IMAGE HANDLER (LOCAL FIRST -> NETWORK)
   // ==================================
-  Widget _buildRecipeImage(String url) {
-    final isLocalFile = url.startsWith("/") ||
-        url.contains("\\") ||
-        url.contains("C:") ||
-        url.contains("storage/emulated");
-
-    if (isLocalFile) {
+  Widget _buildRecipeImage(Recipe r) {
+    if (r.localImage != null && r.localImage!.isNotEmpty) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(20),
         child: Image.file(
-          File(url),
+          File(r.localImage!),
+          width: double.infinity,
+          height: 220,
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) {
-            return Container(
-              height: 200,
-              color: Colors.grey.shade200,
-              child: const Center(
-                child: Icon(Icons.image_not_supported, size: 50),
-              ),
-            );
-          },
+          errorBuilder: (_, __, ___) =>
+              _imageErrorPlaceholder(),
         ),
       );
     }
@@ -192,31 +182,39 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
       child: Image.network(
-        url,
+        r.urlGambar,
+        width: double.infinity,
+        height: 220,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) {
-          return Container(
-            height: 200,
-            color: Colors.grey.shade200,
-            child: const Center(
-              child: Icon(Icons.image_not_supported, size: 50),
-            ),
-          );
-        },
+        errorBuilder: (_, __, ___) =>
+            _imageErrorPlaceholder(),
+      ),
+    );
+  }
+
+  Widget _imageErrorPlaceholder() {
+    return Container(
+      height: 220,
+      color: Colors.grey.shade200,
+      child: const Center(
+        child: Icon(Icons.image_not_supported, size: 50),
       ),
     );
   }
 
   // ==================================
-  // SECTION CARD BUILDER
+  // CARD BUILDER
   // ==================================
-  Widget _buildSectionCard({required String title, required Widget child}) {
+  Widget _buildSectionCard({
+    required String title,
+    required Widget child,
+  }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16.0),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.03),
@@ -229,7 +227,8 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              style: const TextStyle(
+                  fontSize: 16, fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
           child,
         ],

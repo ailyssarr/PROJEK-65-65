@@ -27,33 +27,30 @@ class _UploadPageState extends State<UploadPage> {
   File? _imageFile;
   final ImagePicker _picker = ImagePicker();
 
-  // Simpan gambar ke direktori aplikasi
-  Future<void> _saveImageToAppDirectory(File imageFile) async {
-    final directory = await getApplicationDocumentsDirectory();
-    final fileName = "${DateTime.now().millisecondsSinceEpoch}.jpg";
-    final localImage = File("${directory.path}/$fileName");
+  // Save image ke folder app sendiri
+  Future<File> _saveImage(File image) async {
+    final dir = await getApplicationDocumentsDirectory();
+    final filename = "${DateTime.now().millisecondsSinceEpoch}.jpg";
+    final newFile = File("${dir.path}/$filename");
 
-    await imageFile.copy(localImage.path);
+    return image.copy(newFile.path);
+  }
+
+  // Pick image
+  Future<void> _pickImage(ImageSource source) async {
+    final pickedFile = await _picker.pickImage(source: source);
+
+    if (pickedFile == null) return;
+
+    final temp = File(pickedFile.path);
+    final savedImage = await _saveImage(temp);
 
     setState(() {
-      _imageFile = localImage;
+      _imageFile = savedImage;
     });
   }
 
-  // Ambil gambar
-  Future<void> _pickImage(ImageSource source) async {
-    final picked = await _picker.pickImage(source: source);
-
-    if (picked != null) {
-      setState(() {
-        _imageFile = File(picked.path);
-      });
-
-      await _saveImageToAppDirectory(_imageFile!);
-    }
-  }
-
-  // Simpan resep ke Hive
+  // Save recipe
   void _save() {
     if (_namaCtrl.text.isEmpty ||
         _deskripsiCtrl.text.isEmpty ||
@@ -67,12 +64,15 @@ class _UploadPageState extends State<UploadPage> {
     }
 
     final recipe = Recipe(
-      id: DateTime.now().microsecondsSinceEpoch & 0xFFFFFFFF,
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
       nama: _namaCtrl.text,
       asalDaerah: _asalCtrl.text,
       deskripsi: _deskripsiCtrl.text,
-      urlGambar: _imageFile!.path,
-      localImage: null,
+
+      // ✅ penting buat gambar upload
+      urlGambar: "",
+      localImage: _imageFile!.path,
+
       tagMakanan: ["Upload"],
       porsi: _porsiCtrl.text,
       waktuMemasak: _waktuCtrl.text,
@@ -115,6 +115,7 @@ class _UploadPageState extends State<UploadPage> {
         backgroundColor: _primary,
         foregroundColor: Colors.white,
       ),
+      backgroundColor: const Color(0xFFFFF7F0),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -122,10 +123,10 @@ class _UploadPageState extends State<UploadPage> {
             _input("Nama Masakan", _namaCtrl),
             _input("Asal Daerah", _asalCtrl),
             _input("Deskripsi Masakan", _deskripsiCtrl, maxLines: 3),
-            _input("Porsi (cth: 2 Porsi)", _porsiCtrl),
-            _input("Waktu Memasak (cth: 15 menit)", _waktuCtrl),
+            _input("Porsi", _porsiCtrl),
+            _input("Waktu Memasak", _waktuCtrl),
 
-            // FOTO
+            // IMAGE PICKER
             Container(
               margin: const EdgeInsets.only(bottom: 16),
               child: Column(
@@ -133,17 +134,20 @@ class _UploadPageState extends State<UploadPage> {
                 children: [
                   const Text("Foto Masakan", style: TextStyle(fontSize: 16)),
                   const SizedBox(height: 8),
+
                   if (_imageFile != null)
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(12.0),
+                      borderRadius: BorderRadius.circular(12),
                       child: Image.file(
                         _imageFile!,
-                        height: 150,
+                        height: 160,
                         width: double.infinity,
                         fit: BoxFit.cover,
                       ),
                     ),
+
                   const SizedBox(height: 12),
+
                   Row(
                     children: [
                       ElevatedButton.icon(
@@ -155,7 +159,7 @@ class _UploadPageState extends State<UploadPage> {
                           foregroundColor: Colors.white,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 10),
                       ElevatedButton.icon(
                         onPressed: () => _pickImage(ImageSource.gallery),
                         icon: const Icon(Icons.photo_library),
@@ -171,37 +175,27 @@ class _UploadPageState extends State<UploadPage> {
               ),
             ),
 
-            _input(
-              "Bahan-bahan (ENTER untuk ganti baris)",
-              _bahanCtrl,
-              maxLines: 6,
-            ),
-            _input(
-              "Langkah Memasak (ENTER untuk ganti baris)",
-              _langkahCtrl,
-              maxLines: 6,
-            ),
+            _input("Bahan-bahan (pisahkan ENTER)", _bahanCtrl, maxLines: 6),
+            _input("Langkah Memasak (pisahkan ENTER)", _langkahCtrl, maxLines: 6),
 
             const SizedBox(height: 20),
+
             ElevatedButton(
+              onPressed: _save,
               style: ElevatedButton.styleFrom(
                 backgroundColor: _primary,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 30,
-                  vertical: 14,
-                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 30, vertical: 14),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14.0),
+                  borderRadius: BorderRadius.circular(14),
                 ),
               ),
-              onPressed: _save,
               child: const Text("Upload Resep"),
             ),
           ],
         ),
       ),
-      backgroundColor: const Color(0xFFFFF7F0),
     );
   }
 }
